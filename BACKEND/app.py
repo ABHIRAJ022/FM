@@ -23,5 +23,10 @@ app.register_blueprint(products_bp, url_prefix='/api/products')
 app.register_blueprint(orders_bp, url_prefix='/api/orders')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
+# ✅ ADD THIS to avoid 404 on root URL
+@app.route("/")
+def home():
+    return "🎉 Farmers Market Backend is Live!"
+
 if __name__ == "__main__":
     app.run(debug=True)
