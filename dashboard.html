@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="ASSETS/style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Welcome to Dashboard</h2>
+    <button onclick="logout()">Logout</button>
+
+    <div id="buyer-section" style="display:none;">
+      <h3>All Products</h3>
+      <div id="product-list"></div>
+      <button onclick="placeOrder()">Place Order</button>
+    </div>
+
+    <div id="farmer-section" style="display:none;">
+      <h3>My Products</h3>
+      <form onsubmit="addProduct(); return false;">
+        <input type="text" id="pname" placeholder="Product Name" required />
+        <input type="text" id="pdesc" placeholder="Description" required />
+        <input type="number" id="pprice" placeholder="Price" required />
+        <input type="text" id="pcat" placeholder="Category" required />
+        <input type="number" id="pstock" placeholder="Stock" required />
+        <button type="submit">Add Product</button>
+      </form>
+      <div id="my-products"></div>
+    </div>
+  </div>
+
+  <script>
+    const backendURL = "https://farmers-market-data.vercel.app"; // Replace with your Vercel URL
+
+    function getToken() {
+      return localStorage.getItem("token");
+    }
+
+    function getHeaders() {
+      return {
+        "Authorization": `Bearer ${getToken()}`,
+        "Content-Type": "application/json"
+      };
+    }
+
+    function logout() {
+      localStorage.clear();
+      location.href = "login.html";
+    }
+
+    const token = getToken();
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+
+    if (!token) location.href = "login.html";
+
+    if (role === "buyer") {
+      document.getElementById("buyer-section").style.display = "block";
+      fetch(`${backendURL}/api/products`)
+        .then(res => res.json())
+        .then(products => {
+          const div = document.getElementById("product-list");
+          window.cart = [];
+          products.forEach(p => {
+            const item = document.createElement("div");
+            item.innerHTML = `
+              <b>${p.name}</b> - ₹${p.price} (${p.category})
+              <button onclick='addToCart("${p._id}", "${p.name}", ${p.price})'>Add</button>
+            `;
+            div.appendChild(item);
+          });
+        });
+    }
+
+    if (role === "farmer") {
+      document.getElementById("farmer-section").style.display = "block";
+      loadFarmerProducts();
+    }
+
+    function addProduct() {
+      const product = {
+        name: document.getElementById("pname").value,
+        description: document.getElementById("pdesc").value,
+        price: parseFloat(document.getElementById("pprice").value),
+        category: document.getElementById("pcat").value,
+        stock: parseInt(document.getElementById("pstock").value)
+      };
+      fetch(`${backendURL}/api/products`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(product)
+      }).then(res => res.json()).then(() => {
+        alert("Product added!");
+        loadFarmerProducts();
+      });
+    }
+
+    function loadFarmerProducts() {
+      fetch(`${backendURL}/api/products`, { headers: getHeaders() })
+        .then(res => res.json())
+        .then(products => {
+          const div = document.getElementById("my-products");
+          div.innerHTML = "";
+          const myProds = products.filter(p => p.farmer_id === userId);
+          myProds.forEach(p => {
+            const item = document.createElement("div");
+            item.innerHTML = `
+              <b>${p.name}</b> ₹${p.price}
+              <button onclick='deleteProduct("${p._id}")'>Delete</button>
+            `;
+            div.appendChild(item);
+          });
+        });
+    }
+
+    function deleteProduct(id) {
+      fetch(`${backendURL}/api/products/${id}`, {
+        method: "DELETE",
+        headers: getHeaders()
+      }).then(() => {
+        alert("Deleted");
+        loadFarmerProducts();
+      });
+    }
+
+    function addToCart(id, name, price) {
+      window.cart.push({ product_id: id, name, qty: 1, price });
+      alert(`${name} added to cart`);
+    }
+
+    function placeOrder() {
+      const products = window.cart.map(p => ({ product_id: p.product_id, qty: p.qty }));
+      const address = prompt("Enter your address");
+      const delivery = prompt("Delivery type (Standard/Express)");
+      const payment = prompt("Payment method (COD/Online)");
+      fetch(`${backendURL}/api/orders`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({
+          products, address, delivery_type: delivery, payment_method: payment
+        })
+      }).then(res => res.json())
+        .then(() => {
+          alert("Order placed!");
+          window.cart = [];
+        });
+    }
+  </script>
+</body>
+</html>

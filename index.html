@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Farmers Market - Home</title>
+  <link rel="stylesheet" href="ASSETS/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🌾 Farmers Market</h1>
+    <div>
+      <a href="login.html"><button>Login</button></a>
+      <a href="register.html"><button>Register</button></a>
+    </div>
+
+    <h3>Browse Products</h3>
+    <label>Filter by Category:</label>
+    <select id="categoryFilter" onchange="filterProducts()">
+      <option value="all">All</option>
+    </select>
+
+    <div id="product-list"></div>
+  </div>
+
+  <script>
+    let allProducts = [];
+
+    window.onload = () => {
+      fetch("https://farmers-market-data.vercel.app/api/auth/login")
+        .then(res => res.json())
+        .then(products => {
+          allProducts = products;
+          populateCategories(products);
+          renderProducts(products);
+        });
+    };
+
+    function populateCategories(products) {
+      const categories = new Set(products.map(p => p.category));
+      const dropdown = document.getElementById("categoryFilter");
+      categories.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.innerText = cat;
+        dropdown.appendChild(opt);
+      });
+    }
+
+    function renderProducts(products) {
+      const list = document.getElementById("product-list");
+      list.innerHTML = "";
+      products.forEach(p => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <h4>${p.name}</h4>
+          <p>${p.description}</p>
+          <p><b>₹${p.price}</b> | Category: ${p.category}</p>
+        `;
+        div.style.border = "1px solid #ccc";
+        div.style.padding = "10px";
+        div.style.margin = "10px 0";
+        list.appendChild(div);
+      });
+    }
+
+    function filterProducts() {
+      const cat = document.getElementById("categoryFilter").value;
+      if (cat === "all") {
+        renderProducts(allProducts);
+      } else {
+        const filtered = allProducts.filter(p => p.category === cat);
+        renderProducts(filtered);
+      }
+    }
+  </script>
+</body>
+</html>

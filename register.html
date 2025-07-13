@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <link rel="stylesheet" href="ASSETS/style.css">
+</head>
+<body>
+<div class="container">
+  <h2>Register</h2>
+  <input type="text" id="name" placeholder="Full Name" required />
+  <input type="email" id="email" placeholder="Email" required />
+  <input type="password" id="password" placeholder="Password" required />
+  <select id="role">
+    <option value="buyer">Buyer</option>
+    <option value="farmer">Farmer</option>
+  </select>
+  <button onclick="register()">Register</button>
+  <p>Already have an account? <a href="login.html">Login</a></p>
+</div>
+
+<script>
+  const backendURL = "https://farmers-market-data.vercel.app"; // <-- Update this
+
+  function register() {
+    const user = {
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value,
+      password: document.getElementById("password").value,
+      role: document.getElementById("role").value
+    };
+
+    fetch(`${backendURL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user)
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert("Registered successfully!");
+      window.location.href = "login.html";
+    })
+    .catch(err => {
+      alert("Registration failed");
+      console.error(err);
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="ASSETS/style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Admin Dashboard</h2>
+    <button onclick="logout()">Logout</button>
+
+    <h3>All Users</h3>
+    <div id="user-list"></div>
+
+    <h3>All Orders</h3>
+    <div id="order-list"></div>
+
+    <h3>Sales Report</h3>
+    <button onclick="loadReport()">Generate Report</button>
+    <div id="report"></div>
+  </div>
+
+  <script>
+    const backendURL = "https://farmers-market-data.vercel.app"; // Replace with your Vercel URL
+
+    function getToken() {
+      return localStorage.getItem("token");
+    }
+
+    function getHeaders() {
+      return {
+        "Authorization": `Bearer ${getToken()}`,
+        "Content-Type": "application/json"
+      };
+    }
+
+    function logout() {
+      localStorage.clear();
+      location.href = "login.html";
+    }
+
+    const token = getToken();
+    const role = localStorage.getItem("role");
+
+    if (!token || role !== "admin") location.href = "login.html";
+
+    window.onload = () => {
+      loadUsers();
+      loadOrders();
+    };
+
+    function loadUsers() {
+      fetch(`${backendURL}/api/admin/users`, { headers: getHeaders() })
+        .then(res => res.json())
+        .then(users => {
+          const div = document.getElementById("user-list");
+          users.forEach(u => {
+            const user = document.createElement("div");
+            user.innerHTML = `<b>${u.name}</b> (${u.email}) - ${u.role}`;
+            div.appendChild(user);
+          });
+        });
+    }
+
+    function loadOrders() {
+      fetch(`${backendURL}/api/admin/orders`, { headers: getHeaders() })
+        .then(res => res.json())
+        .then(orders => {
+          const div = document.getElementById("order-list");
+          orders.forEach(o => {
+            const order = document.createElement("div");
+            order.innerHTML = `🧾 Buyer: ${o.buyer_id}, Products: ${o.products.length}, Status: ${o.status}`;
+            div.appendChild(order);
+          });
+        });
+    }
+
+    function loadReport() {
+      fetch(`${backendURL}/api/admin/report`, { headers: getHeaders() })
+        .then(res => res.json())
+        .then(r => {
+          document.getElementById("report").innerHTML = `
+            <p><b>Total Orders:</b> ${r.total_orders}</p>
+            <p><b>Total Sales:</b> ₹${r.total_sales}</p>
+          `;
+        });
+    }
+  </script>
+</body>
+</html>
