@@ -26,7 +26,7 @@
     let allProducts = [];
 
     window.onload = () => {
-      fetch("https://farmers-market-data.vercel.app/api/auth/login")
+      fetch("https://fm-wheat.vercel.app/api/auth/login")
         .then(res => res.json())
         .then(products => {
           allProducts = products;
